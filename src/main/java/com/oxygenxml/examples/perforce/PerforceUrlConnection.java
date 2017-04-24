@@ -9,37 +9,33 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 import ro.sync.ecss.extensions.api.webapp.plugin.FilterURLConnection;
-import ro.sync.exml.plugin.urlstreamhandler.CacheableUrlConnection;
 
 @Slf4j
-public class PerforceUrlConnection extends FilterURLConnection implements CacheableUrlConnection {
+public class PerforceUrlConnection extends FilterURLConnection {
 
 	public PerforceUrlConnection(URLConnection delegateConnection) {
 		super(delegateConnection);
 	}
 
-	String depotPath = "//depot/level1/sample.xml";
-
 	@Override
 	public InputStream getInputStream() throws IOException {
-		log.debug("reading stream from {}", depotPath);
+		log.info("input stream to {}", url);
 
-		P4GetFile pg = new P4GetFile();
-		Optional<InputStream> ois = pg.getFileAsStream(depotPath);
-		return ois.get();
+		P4ReadOperation readOp = new P4ReadOperation(url.toString());
+		Optional<InputStream> optionalIs = readOp.read();
+		return optionalIs.get();
 	}
 
 	@Override
 	public OutputStream getOutputStream() throws IOException {
-		log.debug("getOutputStream");
+		log.info("output stream from {}", url);
 		
 		return new ByteArrayOutputStream() {
-
 			@Override
 			public void close() throws IOException {
 				byte[] fileContents = toByteArray();
-				P4SubmitFile submitOp = new P4SubmitFile();
-				submitOp.write(fileContents, depotPath);
+				P4WriteOperation writeOp = new P4WriteOperation(url.toString());
+				writeOp.write(fileContents);
 			}
 		};
 	}

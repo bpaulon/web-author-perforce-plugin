@@ -10,13 +10,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class P4SubmitFileTest {
+public class P4WriteOperationTest {
 
 	@Rule
 	public TemporaryFolder folder = new TemporaryFolder();
 
 	// folder must exist
 	String depotPath = "//depot/level1/";
+	String serverUri = "perforce://192.168.1.108:1666";
 	String filename = "test3.txt";
 
 	@Test
@@ -26,7 +27,7 @@ public class P4SubmitFileTest {
 
 		writeContent(file);
 
-		P4SubmitFile pd = new P4SubmitFile();
+		P4WriteOperation pd = new P4WriteOperation(serverUri + depotPath);
 		pd.put(file, depotPath + filename, true);
 	}
 
@@ -35,8 +36,8 @@ public class P4SubmitFileTest {
 		String content = LocalDateTime.now().toString();
 		byte[] contentBytes = content.getBytes(Charset.forName("UTF-8"));
 		
-		P4SubmitFile pd = new P4SubmitFile();
-		pd.write(contentBytes, depotPath + filename);
+		P4WriteOperation pd = new P4WriteOperation(serverUri + depotPath + filename);
+		pd.write(contentBytes);
 	}
 
 	private void writeContent(File file) throws IOException {

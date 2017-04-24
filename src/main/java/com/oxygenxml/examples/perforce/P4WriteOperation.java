@@ -2,6 +2,8 @@ package com.oxygenxml.examples.perforce;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -28,44 +30,61 @@ import com.perforce.p4java.server.IOptionsServer;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class P4SubmitFile extends P4ServerUtils {
+public class P4WriteOperation extends P4Operation {
 
-	public void write(byte[] content, String depotPath) {
+	private IOptionsServer server;
+	private String depotPath;
+	
+	public P4WriteOperation(String uriString) {
 		try {
-			final File file = File.createTempFile("test", null);
-			log.info("Created temp file {}", file.getAbsolutePath());
+			URI uri = new URI(uriString);
+			serverUri = "p4javassl://" + uri.getHost() + ":" + uri.getPort();
+			depotPath = uri.getPath();
+
+			server = getOptionsServer(null, null);
+			server.registerProgressCallback(new P4ProgressCallback());
+		} catch (P4JavaException | URISyntaxException e) {
+			log.error("Could not create operation", e);
+		}
+	}
+	
+	public void write(byte[] content) {
+		try {
+			final File file = File.createTempFile("tmp", null);
 			FileUtils.writeByteArrayToFile(file, content);
+			log.info("Created temp file {}", file.getAbsolutePath());
 
 			put(file, depotPath);
+			
+			file.delete();
 		} catch (Exception e) {
 			log.error("P4 write operation to {} failed", depotPath, e);
 		}
 	}
 
-	protected void put(File file, String depotPath) {
+	void put(File file, String depotPath) {
 		put(file, depotPath, true);
 	}
 
-	protected void put(File file, String depotPath, boolean overwrite) {
+	void put(File file, String depotPath, boolean overwrite) {
+		log.debug("Working server URI: {}", serverUri);
+		
 		try {
-			IOptionsServer server = getOptionsServer(null, null);
-			server.registerProgressCallback(new P4ProgressCallback());
-
 			server.setUserName(userName);
+			// must be connected to server in order to login
+			server.connect();
 			server.login(password);
-			log.debug("Working server URI: {}", serverUri);
 
-			put(server, file, depotPath, true);
+			submit(file, depotPath, true);
 		} catch (Exception e) {
 			log.error("Could not submit file {} to {}", file, depotPath, e);
 		}
-
 	}
 
-	public void put(IOptionsServer server, File source, String destination, boolean overwrite) throws IOException {
+	private void submit(File source, String destination, boolean overwrite) throws IOException {
 
 		// create a temporary P4 client
-		IClient client = createTempClient(server, source, destination);
+		IClient client = createTempClient(source, destination);
 
 		String tmpClientName = client.getName();
 
@@ -76,7 +95,7 @@ public class P4SubmitFile extends P4ServerUtils {
 			log.error("Error creating perforce-client {} \n {}", tmpClientName, pexc.getMessage());
 			throw new IOException("Error creating perforce-client " + tmpClientName + "\n" + pexc.getMessage());
 		}
-		log.error("\tcreated tempclient {}", tmpClientName);
+		log.error("Created temp client {}", tmpClientName);
 
 		// check whether the target already exists in perforce (and is not
 		// deleted in head-revision)
@@ -139,10 +158,10 @@ public class P4SubmitFile extends P4ServerUtils {
 		}
 	}
 
-	private IClient createTempClient(IOptionsServer server, File source, String destination) {
+	private IClient createTempClient(File source, String destination) {
 
 		String p4User = server.getUserName();
-		String tmpClientName = "ivyp4_" + p4User + "_" + source.getName() + UUID.randomUUID().toString();
+		String tmpClientName = "webAuthP4" + p4User + "_" + source.getName() + UUID.randomUUID().toString();
 
 		IClient client = new Client(server);
 		client.setName(tmpClientName);
@@ -150,7 +169,7 @@ public class P4SubmitFile extends P4ServerUtils {
 		client.setOwnerName(p4User);
 		client.setServer(server);
 
-		// configureIfStreamClient(server, client);
+		// configureIfStream(client);
 
 		ClientView mapping = new ClientView();
 		mapping.addEntry(
@@ -161,7 +180,7 @@ public class P4SubmitFile extends P4ServerUtils {
 
 	// Stream depots need extra configuration
 	@SuppressWarnings("unused")
-	private void configureIfStreamClient(IOptionsServer server, IClient client) {
+	private void configureIfStream(IClient client) {
 		IDepot depot;
 		try {
 			depot = server.getDepot("StreamsDepot");
@@ -169,10 +188,9 @@ public class P4SubmitFile extends P4ServerUtils {
 
 			depot = server.getDepot("depot");
 			System.out.println(depot.getDepotType());
-			// TODO che
+			// TODO 
 			// client.setStream("//StreamsDepot/mainSampleData");
 		} catch (P4JavaException e) {
-			// FIXME - handle exception
 			log.error("", e);
 		}
 	}

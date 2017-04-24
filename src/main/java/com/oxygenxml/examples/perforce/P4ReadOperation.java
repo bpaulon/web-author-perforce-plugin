@@ -1,32 +1,49 @@
 package com.oxygenxml.examples.perforce;
 
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
 
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.option.server.GetDepotFilesOptions;
 import com.perforce.p4java.server.IOptionsServer;
 
 import lombok.extern.slf4j.Slf4j;
 
-
 @Slf4j
-public class P4GetFile extends P4ServerUtils {
+public class P4ReadOperation extends P4Operation {
 
-	public Optional<InputStream> getFileAsStream(String depotPath) {
+	private IOptionsServer server;
+	private String depotPath;
+
+	public P4ReadOperation(String uriString) {
 		try {
-			IOptionsServer server = getOptionsServer(null, null);
-			server.registerProgressCallback(new P4ProgressCallback());
+			URI uri = new URI(uriString);
+			serverUri = "p4javassl://" + uri.getHost() + ":" + uri.getPort();
+			depotPath = uri.getPath();
 
+			server = getOptionsServer(null, null);
+			server.registerProgressCallback(new P4ProgressCallback());
+		} catch (P4JavaException | URISyntaxException e) {
+			log.error("Could not create read operation", e);
+		}
+	}
+
+	public Optional<InputStream> read() {
+		log.info("Working with server URI {}", serverUri);
+
+		try {
 			server.setUserName(userName);
+			// must be connected to server in order to login
+			server.connect();
 			server.login(password);
-			
-			log.info("Working with server URI {}", serverUri);
-			
+
 			List<IFileSpec> fileList = server.getDepotFiles(FileSpecBuilder.makeFileSpecList(depotPath),
 					new GetDepotFilesOptions());
 
