@@ -8,6 +8,7 @@ import ro.sync.exml.workspace.api.PluginWorkspaceProvider;
 
 public class PerforceURLStreamHandlerPluginExtension implements  URLStreamHandlerPluginExtension {
 
+	
 	public URLStreamHandler getURLStreamHandler(String protocol) {
 	    
 	    boolean isWebapp = Platform.WEBAPP.equals(PluginWorkspaceProvider.getPluginWorkspace().getPlatform());
@@ -15,7 +16,8 @@ public class PerforceURLStreamHandlerPluginExtension implements  URLStreamHandle
 	    
 	    // If this is a url like: perforce-http://depot/params
 	    if (isWebapp && protocol.contains("perforce")) {
-	      //handler = new GithubUrlStreamHandler();
+	    
+	      handler = new PerforceUrlStreamHandler();
 	    }
 	    
 	    return handler;

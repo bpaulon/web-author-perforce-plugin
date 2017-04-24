@@ -9,6 +9,7 @@ import com.perforce.p4java.server.IServer;
 import com.perforce.p4java.server.IOptionsServer;
 import com.perforce.p4java.server.ServerFactory;
 import com.perforce.p4java.option.UsageOptions;
+import com.perforce.p4java.option.server.TrustOptions;
 
 /**
  * Provides simple superclass support for the p4java demo classes, including
@@ -19,7 +20,7 @@ import com.perforce.p4java.option.UsageOptions;
  * documentation for usage and default values.
  */
 
-public abstract class P4JavaDemo {
+public abstract class P4ServerUtils {
 	
 	/**
 	 * The server URI to be used for the demo run. This is retrieved
@@ -102,6 +103,10 @@ public abstract class P4JavaDemo {
 	 */
 	protected static IOptionsServer getOptionsServer(Properties props, UsageOptions opts) throws P4JavaException, URISyntaxException {
 		IOptionsServer server = ServerFactory.getOptionsServer(serverUri, props, opts);
+		
+		//To allow connection use the 'addTrust' method with the 'autoAccept' option. 
+		server.addTrust(new TrustOptions(true, false, true));
+		
 		if (server != null) {
 			server.connect();
 		}

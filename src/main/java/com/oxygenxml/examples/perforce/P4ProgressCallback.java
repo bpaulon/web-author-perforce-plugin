@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
  * prepended.
  */
 @Slf4j
-public class ProgressCallback implements IProgressCallback {
+public class P4ProgressCallback implements IProgressCallback {
 
 	public void start(int key) {
 		log.debug("Starting command {}", key);

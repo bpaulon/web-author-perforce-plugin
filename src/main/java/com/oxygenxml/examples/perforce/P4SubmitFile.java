@@ -6,6 +6,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.commons.io.FileUtils;
+
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.core.ChangelistStatus;
 import com.perforce.p4java.core.IChangelist;
@@ -26,34 +28,45 @@ import com.perforce.p4java.server.IOptionsServer;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class P4SubmitFile extends P4JavaDemo {
+public class P4SubmitFile extends P4ServerUtils {
 
-	public void put(File file, String depotPath, boolean overwrite) {
+	public void write(byte[] content, String depotPath) {
+		try {
+			final File file = File.createTempFile("test", null);
+			log.info("Created temp file {}", file.getAbsolutePath());
+			FileUtils.writeByteArrayToFile(file, content);
+
+			put(file, depotPath);
+		} catch (Exception e) {
+			log.error("P4 write operation to {} failed", depotPath, e);
+		}
+	}
+
+	protected void put(File file, String depotPath) {
+		put(file, depotPath, true);
+	}
+
+	protected void put(File file, String depotPath, boolean overwrite) {
 		try {
 			IOptionsServer server = getOptionsServer(null, null);
-			server.registerProgressCallback(new ProgressCallback());
+			server.registerProgressCallback(new P4ProgressCallback());
 
 			server.setUserName(userName);
 			server.login(password);
 			log.debug("Working server URI: {}", serverUri);
-			
-			//put(server, new File("C:\\proj\\oxygen\\temp\\test12.txt"), "//StreamsDepot/mainSampleData/folderDiff/test12.txt", true);
-			//put(server, new File("C:\\proj\\oxygen\\temp\\depot\\test3.xml"), "//depot/test3.xml", true);
-			
+
 			put(server, file, depotPath, true);
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("Could not submit file {} to {}", file, depotPath, e);
 		}
-		
+
 	}
-	
-	public static void put(IOptionsServer server, File source, String destination, boolean overwrite) throws IOException {
-		
-		String p4User = server.getUserName();
-		
+
+	public void put(IOptionsServer server, File source, String destination, boolean overwrite) throws IOException {
+
 		// create a temporary P4 client
-		IClient client = buildTempClient(server, source, destination);
-		
+		IClient client = createTempClient(server, source, destination);
+
 		String tmpClientName = client.getName();
 
 		try {
@@ -65,45 +78,36 @@ public class P4SubmitFile extends P4JavaDemo {
 		}
 		log.error("\tcreated tempclient {}", tmpClientName);
 
-
-		// check whether the target already exists in perforce (and is not deleted in head-revision)
+		// check whether the target already exists in perforce (and is not
+		// deleted in head-revision)
 		Boolean p4add = false;
-		if (P4Utils.p4FileExists(server,destination)) {
+		if (P4Utils.p4FileExists(server, destination)) {
 			log.debug("File exists in perforce already: {}", destination);
 
 			if (overwrite) {
 				log.debug("updating {}", destination);
-				p4add = false;	// no add, but edit in perforce
+				p4add = false; // no add, but edit in perforce
 			} else {
 				log.debug("Overwrite set to false, ignoring {}", source.getName());
 				return;
 			}
 		}
 
-		Changelist changeListImpl = new Changelist(
-				IChangelist.UNKNOWN,
-				client.getName(),
-				p4User,
-				ChangelistStatus.NEW,
-				new Date(),
-				"submitted by webapp author",
-				false,
-				(Server) server
-		);
+		String p4User = server.getUserName();
+		Changelist changeListImpl = new Changelist(IChangelist.UNKNOWN, client.getName(), p4User, ChangelistStatus.NEW,
+				new Date(), "submitted by webapp author", false, (Server) server);
 
 		try {
 			IChangelist changelist = client.createChangelist(changeListImpl);
 
 			if (p4add) {
-				client.addFiles(
-						FileSpecBuilder.makeFileSpecList(destination), false, changelist.getId(), null, false);
+				client.addFiles(FileSpecBuilder.makeFileSpecList(destination), false, changelist.getId(), null, false);
 			} else {
 				// "flush" the file (sync -k)
-				client.sync(FileSpecBuilder.makeFileSpecList(destination),false,false,true,false);
+				client.sync(FileSpecBuilder.makeFileSpecList(destination), false, false, true, false);
 				// open for edit
-				client.editFiles(
-						FileSpecBuilder.makeFileSpecList(destination), false, false, changelist.getId(), null);
-				//FileSpecBuilder.makeFileSpecList(destination), null);
+				client.editFiles(FileSpecBuilder.makeFileSpecList(destination), false, false, changelist.getId(), null);
+				// FileSpecBuilder.makeFileSpecList(destination), null);
 			}
 
 			changelist.update();
@@ -115,15 +119,16 @@ public class P4SubmitFile extends P4JavaDemo {
 					if (fileSpec != null) {
 						if (fileSpec.getOpStatus() == FileSpecOpStatus.VALID) {
 							log.info("submitted: {}", fileSpec.getDepotPathString());
-						} else if (fileSpec.getOpStatus() == FileSpecOpStatus.INFO){
+						} else if (fileSpec.getOpStatus() == FileSpecOpStatus.INFO) {
 							log.debug(fileSpec.getStatusMessage());
-						} else if (fileSpec.getOpStatus() == FileSpecOpStatus.ERROR){
+						} else if (fileSpec.getOpStatus() == FileSpecOpStatus.ERROR) {
 							log.debug(fileSpec.getStatusMessage());
 						}
 					}
 				}
 			}
-			
+
+			// delete the temporary client
 			P4Utils.deleteClient(server, client);
 		} catch (ConnectionException e) {
 			e.printStackTrace();
@@ -131,28 +136,31 @@ public class P4SubmitFile extends P4JavaDemo {
 			e.printStackTrace();
 		} catch (AccessException e) {
 			e.printStackTrace();
-		} 
+		}
 	}
 
-	private IClient buildTempClient(IOptionsServer server, File source, String destination) {
-		
+	private IClient createTempClient(IOptionsServer server, File source, String destination) {
+
 		String p4User = server.getUserName();
 		String tmpClientName = "ivyp4_" + p4User + "_" + source.getName() + UUID.randomUUID().toString();
-		
-		IClient	client = new Client(server);
+
+		IClient client = new Client(server);
 		client.setName(tmpClientName);
 		client.setRoot(source.getParent());
 		client.setOwnerName(p4User);
 		client.setServer(server);
 
-		//configureIfStreamClient(server, client);
+		// configureIfStreamClient(server, client);
 
 		ClientView mapping = new ClientView();
-		mapping.addEntry(new ClientView.ClientViewMapping(0,destination, "//" + tmpClientName + "/" + source.getName()));
+		mapping.addEntry(
+				new ClientView.ClientViewMapping(0, destination, "//" + tmpClientName + "/" + source.getName()));
 		client.setClientView(mapping);
 		return client;
 	}
-	
+
+	// Stream depots need extra configuration
+	@SuppressWarnings("unused")
 	private void configureIfStreamClient(IOptionsServer server, IClient client) {
 		IDepot depot;
 		try {
@@ -168,5 +176,5 @@ public class P4SubmitFile extends P4JavaDemo {
 			log.error("", e);
 		}
 	}
-	 
+
 }

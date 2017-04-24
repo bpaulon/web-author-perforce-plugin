@@ -20,4 +20,13 @@
 			<filtered>true</filtered>
 		</file>
 	</files>
+	<!-- In case one of your plugins needs to package its dependencies, use a section like the one below. -->
+	<dependencySets>
+	    <dependencySet>
+	        <unpack>false</unpack>
+	        <scope>runtime</scope>
+	        <outputDirectory>/lib</outputDirectory>
+	        <useProjectArtifact>false</useProjectArtifact>
+	    </dependencySet>
+	</dependencySets>
 </component>
