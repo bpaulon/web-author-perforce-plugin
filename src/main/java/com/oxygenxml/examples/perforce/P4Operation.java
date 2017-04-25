@@ -47,7 +47,7 @@ public class P4Operation {
 	protected IOptionsServer getOptionsServer(Properties props, UsageOptions opts) throws P4JavaException, URISyntaxException {
 		IOptionsServer server = ServerFactory.getOptionsServer(serverUri, props, opts);
 		
-		//To allow connection use the 'addTrust' method with the 'autoAccept' option. 
+		//To allow SSL connections use the 'addTrust' method with the 'autoAccept' option. 
 		server.addTrust(new TrustOptions(true, false, true));
 		
 		return server;

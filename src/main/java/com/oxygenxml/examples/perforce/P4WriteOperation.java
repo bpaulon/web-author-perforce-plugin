@@ -34,7 +34,7 @@ public class P4WriteOperation extends P4Operation {
 
 	private IOptionsServer server;
 	private String depotPath;
-	
+
 	public P4WriteOperation(String uriString) {
 		try {
 			URI uri = new URI(uriString);
@@ -47,7 +47,13 @@ public class P4WriteOperation extends P4Operation {
 			log.error("Could not create operation", e);
 		}
 	}
-	
+
+	/**
+	 * Writes the passed in byte array to a temporary file. The temp file is
+	 * then sync and submitted to perforce
+	 * 
+	 * @param content
+	 */
 	public void write(byte[] content) {
 		try {
 			final File file = File.createTempFile("tmp", null);
@@ -55,7 +61,7 @@ public class P4WriteOperation extends P4Operation {
 			log.info("Created temp file {}", file.getAbsolutePath());
 
 			put(file, depotPath);
-			
+
 			file.delete();
 		} catch (Exception e) {
 			log.error("P4 write operation to {} failed", depotPath, e);
@@ -68,7 +74,7 @@ public class P4WriteOperation extends P4Operation {
 
 	void put(File file, String depotPath, boolean overwrite) {
 		log.debug("Working server URI: {}", serverUri);
-		
+
 		try {
 			server.setUserName(userName);
 			// must be connected to server in order to login
@@ -126,7 +132,6 @@ public class P4WriteOperation extends P4Operation {
 				client.sync(FileSpecBuilder.makeFileSpecList(destination), false, false, true, false);
 				// open for edit
 				client.editFiles(FileSpecBuilder.makeFileSpecList(destination), false, false, changelist.getId(), null);
-				// FileSpecBuilder.makeFileSpecList(destination), null);
 			}
 
 			changelist.update();
@@ -149,10 +154,11 @@ public class P4WriteOperation extends P4Operation {
 
 			// delete the temporary client
 			P4Utils.deleteClient(server, client);
+			server.disconnect();
 		} catch (ConnectionException e) {
-			e.printStackTrace();
+			log.error("Exception connecting to server", e);
 		} catch (RequestException e) {
-			e.printStackTrace();
+			log.error("Exception making reqquest", e);
 		} catch (AccessException e) {
 			e.printStackTrace();
 		}
@@ -188,7 +194,7 @@ public class P4WriteOperation extends P4Operation {
 
 			depot = server.getDepot("depot");
 			System.out.println(depot.getDepotType());
-			// TODO 
+			// TODO
 			// client.setStream("//StreamsDepot/mainSampleData");
 		} catch (P4JavaException e) {
 			log.error("", e);

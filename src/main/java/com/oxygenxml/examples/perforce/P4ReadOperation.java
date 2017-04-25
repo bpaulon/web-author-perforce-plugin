@@ -1,10 +1,10 @@
 package com.oxygenxml.examples.perforce;
 
 import java.io.InputStream;
+import java.net.PasswordAuthentication;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.Optional;
 
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
@@ -21,28 +21,32 @@ public class P4ReadOperation extends P4Operation {
 
 	private IOptionsServer server;
 	private String depotPath;
+	
+	private PasswordAuthentication credentials;
 
-	public P4ReadOperation(String uriString) {
+	public P4ReadOperation(String uriString, PasswordAuthentication credentials) {
 		try {
 			URI uri = new URI(uriString);
-			serverUri = "p4javassl://" + uri.getHost() + ":" + uri.getPort();
-			depotPath = uri.getPath();
+			this.serverUri = "p4javassl://" + uri.getHost() + ":" + uri.getPort();
+			this.depotPath = uri.getPath();
+			
+			this.credentials = credentials;
 
-			server = getOptionsServer(null, null);
-			server.registerProgressCallback(new P4ProgressCallback());
+			this.server = getOptionsServer(null, null);
+			this.server.registerProgressCallback(new P4ProgressCallback());
 		} catch (P4JavaException | URISyntaxException e) {
 			log.error("Could not create read operation", e);
 		}
 	}
 
-	public Optional<InputStream> read() {
+	public InputStream read() throws Exception {
 		log.info("Working with server URI {}", serverUri);
 
 		try {
-			server.setUserName(userName);
+			server.setUserName(credentials.getUserName());
 			// must be connected to server in order to login
 			server.connect();
-			server.login(password);
+			server.login(new String(credentials.getPassword()));
 
 			List<IFileSpec> fileList = server.getDepotFiles(FileSpecBuilder.makeFileSpecList(depotPath),
 					new GetDepotFilesOptions());
@@ -61,15 +65,17 @@ public class P4ReadOperation extends P4Operation {
 				}
 			}
 
-			return Optional.of(is);
+			return is;
 
 		} catch (RequestException rexc) {
 			log.error(rexc.getDisplayString(), rexc);
+			throw rexc;
 		} catch (Exception e) {
 			log.error(e.getLocalizedMessage(), e);
+			throw e;
 		}
-
-		return Optional.empty();
+		
+		
 	}
 
 	protected static String formatFileSpec(IFileSpec fileSpec) {
