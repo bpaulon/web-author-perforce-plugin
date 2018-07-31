@@ -12,7 +12,7 @@ import com.perforce.p4java.server.ServerFactory;
 
 public class P4Operation {
 
-	protected String serverUri = "p4javassl://192.168.1.108:1666";
+	protected String serverUri = "p4java://192.168.1.108:1666";
 			// for non SSL connections
 			/*"p4java://public.perforce.com:1666"*/
 	
@@ -20,7 +20,7 @@ public class P4Operation {
 	
 	protected String clientName = "p4java_webAuth";
 	
-	protected String password = "Passw0rd";
+	protected String password = "pass";
 	
 	/**
 	 * Get an IServer object from the P4Java server factory
@@ -48,7 +48,7 @@ public class P4Operation {
 		IOptionsServer server = ServerFactory.getOptionsServer(serverUri, props, opts);
 		
 		//To allow SSL connections use the 'addTrust' method with the 'autoAccept' option. 
-		server.addTrust(new TrustOptions(true, false, true));
+		//server.addTrust(new TrustOptions(true, false, true));
 		
 		return server;
 	}

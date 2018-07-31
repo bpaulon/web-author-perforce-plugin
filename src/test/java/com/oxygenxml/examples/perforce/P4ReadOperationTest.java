@@ -13,12 +13,12 @@ import org.junit.Test;
 
 public class P4ReadOperationTest {
 
-	String p4Uri = "perforce://192.168.1.108:1666//StreamsDepot/mainSampleData/folderDiff/test9.txt";
+	String p4Uri = "perforce://localhost:1666//depot/p4java/LICENSE.txt";
 
 	@Test
 	public void getFileTest() throws Exception {
 		P4ReadOperation pg = new P4ReadOperation(p4Uri,
-				new PasswordAuthentication("test_user", "Passw0rd".toCharArray()));
+				new PasswordAuthentication("test-user", "pass".toCharArray()));
 		InputStream is = pg.read();
 
 		StringWriter writer = new StringWriter();

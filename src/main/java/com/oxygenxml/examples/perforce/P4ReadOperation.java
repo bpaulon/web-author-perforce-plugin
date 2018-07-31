@@ -27,7 +27,7 @@ public class P4ReadOperation extends P4Operation {
 	public P4ReadOperation(String uriString, PasswordAuthentication credentials) {
 		try {
 			URI uri = new URI(uriString);
-			this.serverUri = "p4javassl://" + uri.getHost() + ":" + uri.getPort();
+			this.serverUri = "p4java://" + uri.getHost() + ":" + uri.getPort();
 			this.depotPath = uri.getPath();
 			
 			this.credentials = credentials;
