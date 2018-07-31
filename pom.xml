@@ -25,7 +25,7 @@
 	<!-- </scm> -->
 
 	<properties>
-		<oxygen.sdk.version>19.0.0.0</oxygen.sdk.version>
+		<oxygen.sdk.version>20.1.0.0</oxygen.sdk.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -41,34 +41,33 @@
 
 
 	<dependencies>
-<!-- 		<dependency> -->
-<!-- 			<groupId>log4j</groupId> -->
-<!-- 			<artifactId>log4j</artifactId> -->
-<!-- 			<version>1.2.14</version> -->
-<!-- 			<scope>provided</scope> -->
-<!-- 		</dependency> -->
+
 		<dependency>
 		    <groupId>ch.qos.logback</groupId>
 		    <artifactId>logback-classic</artifactId>
 		    <version>1.2.3</version>
 		</dependency>
+		
 		<dependency>
 		    <groupId>com.perforce</groupId>
 		    <artifactId>p4java</artifactId>
-		    <version>2016.1.1499206</version>
+		    <version>2018.1.1638495</version>
 		</dependency>
+		
 		<dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.16.4</version>
             <scope>provided</scope>
         </dependency>
+        
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
 			<version>3.0.1</version>
 			<scope>provided</scope>
 		</dependency>
+		
 		<dependency>
 			<groupId>com.oxygenxml</groupId>
 			<artifactId>oxygen-webapp</artifactId>
