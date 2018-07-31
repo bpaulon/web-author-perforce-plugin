@@ -20,10 +20,10 @@ public class P4Utils {
 
 	/**
 	 * Check whether a file exists in perforce and is NOT deleted in the
-	 * head-revision (requires an initialised server)
+	 * head-revision (requires an initialized server)
 	 * 
 	 * @param f
-	 *            File (p4-depotpath) to be checked
+	 *            File (p4 depot path) to be checked
 	 * @return true if file exists and is not deleted, otherwise false.
 	 */
 	public static boolean p4FileExists(IOptionsServer server, String f) {
@@ -36,11 +36,9 @@ public class P4Utils {
 			}
 		} catch (ConnectionException e) {
 			log.error("Can't connect perforce-server", e);
-			e.printStackTrace();
 			return false;
 		} catch (AccessException e) {
 			log.error("Can't access perforce-server", e);
-			e.printStackTrace();
 			return false;
 		}
 
@@ -48,19 +46,17 @@ public class P4Utils {
 	}
 
 	public static void deleteClient(IOptionsServer server, IClient client) {
-		log.debug("Deleting temporary perforce client " + client.getName());
+		log.debug("Deleting temporary perforce client {} ", client.getName());
 
 		// revert open files if any
 		try {
 			client.revertFiles(FileSpecBuilder.makeFileSpecList("//..."), false, 0, false, true);
 		} catch (ConnectionException e) {
-			log.warn("Perforce connection problem while reverting files of client " + client.getName());
+			log.warn("Perforce connection problem while reverting files of client {}", client.getName());
 			log.warn("Please cleanup yourself.");
-			e.printStackTrace();
 		} catch (AccessException e) {
-			log.warn("Perforce access problem while reverting files of client " + client.getName());
+			log.warn("Perforce access problem while reverting files of client {} ", client.getName());
 			log.warn("Please cleanup yourself.");
-			e.printStackTrace();
 		}
 
 		// Remove any pending changes.
@@ -87,40 +83,26 @@ public class P4Utils {
 					if (c != null) {
 						if (c.getStatus() == ChangelistStatus.PENDING) {
 							server.deletePendingChangelist(c.getId());
-							log.debug("Deleted pending changelist " + c.getId());
+							log.debug("Deleted pending changelist {}", c.getId());
 						} else {
 							log.warn("Something impossible happened while deleting pending changelists. "
-									+ "(change " + c.getId() + ", status: " + c.getStatus() + ")");
+									+ "(change {}, status {})", c.getId(), c.getStatus());
 						}
 					}
 				}
 			} else {
 				log.debug("No pending changelists");
 			}
-		} catch (ConnectionException e) {
-			log.error("Error while deleting pending changes");
-			e.printStackTrace();
-		} catch (RequestException e) {
-			log.error("Error while deleting pending changes");
-			e.printStackTrace();
-		} catch (AccessException e) {
-			log.error("Error while deleting pending changes");
-			e.printStackTrace();
-		}
+    } catch (ConnectionException | RequestException | AccessException e) {
+      log.error("Error while deleting pending changes", e);
+    }
 
 		// delete client
 		try {
 			server.deleteClient(client.getName(), false);
-			log.debug("Deleted client " + client.getName());
-		} catch (ConnectionException e) {
-			log.error("Error deleting client " + client.getName());
-			e.printStackTrace();
-		} catch (RequestException e) {
-			log.error("Error deleting client " + client.getName());
-			e.printStackTrace();
-		} catch (AccessException e) {
-			log.error("Error deleting client " + client.getName());
-			e.printStackTrace();
+			log.debug("Deleted client {}", client.getName());
+		} catch (ConnectionException | RequestException | AccessException e) {
+			log.error("Error deleting client {}", client.getName(), e);
 		}
 	}
 }

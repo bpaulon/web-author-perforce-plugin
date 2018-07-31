@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
  * version simply puts whatever it's passed onto standard output with a dash
  * prepended.
  */
-
 @Slf4j
 public class P4ProgressCallback implements IProgressCallback {
 

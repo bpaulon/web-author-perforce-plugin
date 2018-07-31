@@ -68,7 +68,7 @@ public class PerforceUrlStreamHandler extends URLStreamHandlerWithContext {
 							// send back the URL for which to authenticate.
 							url.toExternalForm(), true));
 		} else {
-			log.debug("userCredentials: {} - {}", userCredentials.getUserName(), userCredentials.getPassword());
+			log.debug("userCredentials: {} ", userCredentials.getUserName());
 		}
 
 		URLConnection p4connection = new URLConnection(url) {

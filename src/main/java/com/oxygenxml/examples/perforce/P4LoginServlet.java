@@ -37,7 +37,7 @@ public class P4LoginServlet extends WebappServletPluginExtension {
 			if (userCredentialsMap == null) {
 				// if no credentials previously stored we create a new
 				// credentials map.
-				userCredentialsMap = new HashMap<String, PasswordAuthentication>();
+				userCredentialsMap = new HashMap<>();
 				PerforceUrlStreamHandler.credentials.put(userId, userCredentialsMap);
 			}
 			userCredentialsMap.put(serverId, new PasswordAuthentication(user, passwd.toCharArray()));

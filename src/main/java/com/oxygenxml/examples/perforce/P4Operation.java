@@ -1,5 +1,6 @@
 package com.oxygenxml.examples.perforce;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Properties;
 
@@ -8,19 +9,17 @@ import com.perforce.p4java.option.UsageOptions;
 import com.perforce.p4java.option.server.TrustOptions;
 import com.perforce.p4java.server.IOptionsServer;
 import com.perforce.p4java.server.IServer;
+import com.perforce.p4java.server.IServerAddress;
 import com.perforce.p4java.server.ServerFactory;
 
 public class P4Operation {
 
-	protected String serverUri = "p4javassl://192.168.1.108:1666";
-			// for non SSL connections
-			/*"p4java://public.perforce.com:1666"*/
-	
-	protected String userName = "test-user";
-	
-	protected String clientName = "p4java_webAuth";
-	
-	protected String password = "Passw0rd";
+  // SSL connections
+  // p4javassl://my.server.com:1666
+  // Non SSL connections
+  // p4java://my.server.com:1666
+	protected URI serverUri;
+			 
 	
 	/**
 	 * Get an IServer object from the P4Java server factory
@@ -31,12 +30,12 @@ public class P4Operation {
 	 * @throws URISyntaxException
 	 */
 	protected IServer getServer(Properties props) throws P4JavaException, URISyntaxException {
-		IServer server = ServerFactory.getServer(serverUri, props);
+		IServer server = ServerFactory.getServer(serverUri.toString(), props);
 		return server;
 	}
 	
 	/**
-	 * Get an IOptionsServer object from the P4Java server factor
+	 * Get an IOptionsServer object from the P4Java server factory
 	 * 
 	 * @param props
 	 * @param opts
@@ -45,10 +44,12 @@ public class P4Operation {
 	 * @throws URISyntaxException
 	 */
 	protected IOptionsServer getOptionsServer(Properties props, UsageOptions opts) throws P4JavaException, URISyntaxException {
-		IOptionsServer server = ServerFactory.getOptionsServer(serverUri, props, opts);
+		IOptionsServer server = ServerFactory.getOptionsServer(serverUri.toString(), props, opts);
 		
-		//To allow SSL connections use the 'addTrust' method with the 'autoAccept' option. 
-		server.addTrust(new TrustOptions(true, false, true));
+		if(IServerAddress.Protocol.P4JAVASSL.toString().equals(serverUri.getScheme())) {
+		  //To allow SSL connections use the 'addTrust' method with the 'autoAccept' option. 
+		  server.addTrust(new TrustOptions(true, false, true));
+		}
 		
 		return server;
 	}

@@ -2,6 +2,7 @@ package com.oxygenxml.examples.perforce;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.PasswordAuthentication;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
@@ -35,12 +36,16 @@ public class P4WriteOperation extends P4Operation {
 	private IOptionsServer server;
 	private String depotPath;
 
-	public P4WriteOperation(String uriString) {
+	 private PasswordAuthentication credentials;
+	 
+	public P4WriteOperation(String uriString, PasswordAuthentication credentials) {
 		try {
 			URI uri = new URI(uriString);
-			serverUri = "p4javassl://" + uri.getHost() + ":" + uri.getPort();
+			this.serverUri = new URI(uri.getScheme() + "://" + uri.getHost() + ":" + uri.getPort());
 			depotPath = uri.getPath();
 
+			this.credentials = credentials;
+			
 			server = getOptionsServer(null, null);
 			server.registerProgressCallback(new P4ProgressCallback());
 		} catch (P4JavaException | URISyntaxException e) {
@@ -61,8 +66,9 @@ public class P4WriteOperation extends P4Operation {
 			log.info("Created temp file {}", file.getAbsolutePath());
 
 			put(file, depotPath);
-
-			file.delete();
+			
+			boolean fileDeleted = file.delete();
+			log.info("Temporary file {} deleted {}", file, fileDeleted);
 		} catch (Exception e) {
 			log.error("P4 write operation to {} failed", depotPath, e);
 		}
@@ -76,10 +82,10 @@ public class P4WriteOperation extends P4Operation {
 		log.debug("Working server URI: {}", serverUri);
 
 		try {
-			server.setUserName(userName);
+			server.setUserName(credentials.getUserName());
 			// must be connected to server in order to login
 			server.connect();
-			server.login(password);
+			server.login(new String(credentials.getPassword()));
 
 			submit(file, depotPath, true);
 		} catch (Exception e) {
@@ -105,7 +111,7 @@ public class P4WriteOperation extends P4Operation {
 
 		// check whether the target already exists in perforce (and is not
 		// deleted in head-revision)
-		Boolean p4add = false;
+		Boolean p4add = true;
 		if (P4Utils.p4FileExists(server, destination)) {
 			log.debug("File exists in perforce already: {}", destination);
 

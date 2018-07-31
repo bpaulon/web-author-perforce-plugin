@@ -45,7 +45,7 @@ public class PerforceUrlConnection extends FilterURLConnection {
 			@Override
 			public void close() throws IOException {
 				byte[] fileContents = toByteArray();
-				P4WriteOperation writeOp = new P4WriteOperation(url.toString());
+				P4WriteOperation writeOp = new P4WriteOperation(url.toString(), credentials);
 				writeOp.write(fileContents);
 			}
 		};

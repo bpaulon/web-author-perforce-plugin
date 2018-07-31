@@ -13,8 +13,8 @@ public class PerforceURLStreamHandlerPluginExtension implements URLStreamHandler
 		URLStreamHandler handler = null;
 
 		// the URL must be like:
-		// perforce*://server:port//depot/dir1/dir2/file.xml
-		if (isWebapp && protocol.startsWith("perforce")) {
+		// p4java*://server:port//depot/dir1/dir2/file.xml
+		if (isWebapp && protocol.startsWith("p4java")) {
 			handler = new PerforceUrlStreamHandler();
 		}
 

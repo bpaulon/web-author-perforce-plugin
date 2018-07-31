@@ -27,7 +27,7 @@ public class P4ReadOperation extends P4Operation {
 	public P4ReadOperation(String uriString, PasswordAuthentication credentials) {
 		try {
 			URI uri = new URI(uriString);
-			this.serverUri = "p4javassl://" + uri.getHost() + ":" + uri.getPort();
+			this.serverUri = new URI(uri.getScheme() + "://" + uri.getHost() + ":" + uri.getPort());
 			this.depotPath = uri.getPath();
 			
 			this.credentials = credentials;
@@ -39,7 +39,7 @@ public class P4ReadOperation extends P4Operation {
 		}
 	}
 
-	public InputStream read() throws Exception {
+	public InputStream read() throws P4JavaException {
 		log.info("Working with server URI {}", serverUri);
 
 		try {
@@ -70,7 +70,7 @@ public class P4ReadOperation extends P4Operation {
 		} catch (RequestException rexc) {
 			log.error(rexc.getDisplayString(), rexc);
 			throw rexc;
-		} catch (Exception e) {
+		} catch (P4JavaException e) {
 			log.error(e.getLocalizedMessage(), e);
 			throw e;
 		}
