@@ -171,7 +171,7 @@
   goog.events.listen(workspace, sync.api.Workspace.EventType.BEFORE_EDITOR_LOADED, function(e) {
     var url = e.options.url;
     // If the URL starts with http:, use thw webdav protocol handler.
-    if (url.match(/^perforce-http?:/)) {
+    if (url.match(/^p4java?:/)) {
       var loggedInUser = localStorage.getItem('perforce.user');
       if (loggedInUser) {
         e.options.userName = loggedInUser;
@@ -197,7 +197,7 @@
 
       // Listen for messages sent from the server-side code.
       goog.events.listen(editor, sync.api.Editor.EventTypes.CUSTOM_MESSAGE_RECEIVED, function(e) {
-        
+        console.log("custom message recieived");
         var context = e.context;
         var url = e.message.message;
 
@@ -309,7 +309,7 @@
    *
    * @constructor
    */
-  var WebdavFileBrowser = function() {
+  var PerforceFileBrowser = function() {
     goog.events.listenOnce(workspace, sync.api.Editor.EventTypes.BEFORE_EDITOR_LOADED, function(e) {
       this.editor = e.editor;
     }.bind(this));
@@ -367,21 +367,21 @@
       }
     }, this), 0);
   };
-  goog.inherits(WebdavFileBrowser, sync.api.FileBrowsingDialog);
+  goog.inherits(PerforceFileBrowser, sync.api.FileBrowsingDialog);
 
   /**
    * Processes and adds the url to the enforced servers list.
    *
    * @param url the url to enforce.
    */
-  WebdavFileBrowser.prototype.addEnforcedUrl = function(url) {
+  PerforceFileBrowser.prototype.addEnforcedUrl = function(url) {
     if(url) {
       this.enforcedServers.push(this.processURL(url));
     }
   };
 
   /** @override */
-  WebdavFileBrowser.prototype.renderRepoPreview = function(element) {
+  PerforceFileBrowser.prototype.renderRepoPreview = function(element) {
     this.showTitleBarLogoutButton(element);
 
     var url = this.getCurrentFolderUrl();
@@ -411,7 +411,7 @@
   };
 
   /** @override */
-  WebdavFileBrowser.prototype.renderRepoEditing = function(element) {
+  PerforceFileBrowser.prototype.renderRepoEditing = function(element) {
     // hide the logout button.
     this.hideTitleBarLogoutButton(element);
 
@@ -479,7 +479,7 @@
   };
 
   /** @override */
-  WebdavFileBrowser.prototype.handleOpenRepo = function(element, e) {
+  PerforceFileBrowser.prototype.handleOpenRepo = function(element, e) {
     var input = document.getElementById('webdav-browse-url');
     var url = input.value.trim();
 
@@ -510,7 +510,7 @@
    * @param dialogChild a child of the dialog element from which
    * we can start the search for the title bar.
    */
-  WebdavFileBrowser.prototype.showTitleBarLogoutButton = function(dialogChild) {
+  PerforceFileBrowser.prototype.showTitleBarLogoutButton = function(dialogChild) {
     var dialogTitleBar = (new goog.dom.DomHelper())
       .getAncestorByClass(dialogChild, 'modal-dialog');
 
@@ -537,7 +537,7 @@
    * @param dialogChild a child of the dialog element from which
    * we can start the search for the title bar.
    */
-  WebdavFileBrowser.prototype.hideTitleBarLogoutButton = function(dialogChild) {
+  PerforceFileBrowser.prototype.hideTitleBarLogoutButton = function(dialogChild) {
     var dialogTitleBar = (new goog.dom.DomHelper())
       .getAncestorByClass(dialogChild, 'modal-dialog');
 
@@ -552,7 +552,7 @@
    *
    * @private
    */
-  WebdavFileBrowser.prototype.requestUrlInfo_ = function (url, callback) {
+  PerforceFileBrowser.prototype.requestUrlInfo_ = function (url, callback) {
     console.log('Old method called ', url);
     goog.net.XhrIo.send(
       '../plugins-dispatcher/webdav-url-info?url=' + encodeURIComponent(url),
@@ -567,7 +567,7 @@
    *
    * @param {goog.events.Event} e The XHR event.
    */
-  WebdavFileBrowser.prototype.handleUrlInfoReceived = function (url, callback, e) {
+  PerforceFileBrowser.prototype.handleUrlInfoReceived = function (url, callback, e) {
     var request = /** {@type goog.net.XhrIo} */ (e.target);
     var status = request.getStatus();
     if (status == 200) {
@@ -588,7 +588,7 @@
    * @param info the available url information.
    *
    */
-  WebdavFileBrowser.prototype.openUrlInfo = function(url, info) {
+  PerforceFileBrowser.prototype.openUrlInfo = function(url, info) {
     var isFile = info.type === 'FILE';
     // Make sure folder urls end with '/'.
     if (!isFile && url.lastIndexOf('/') !== url.length - 1) {
@@ -606,7 +606,7 @@
    * @param info the available url information.
    *
    */
-  WebdavFileBrowser.prototype.setUrlInfo = function(url, info) {
+  PerforceFileBrowser.prototype.setUrlInfo = function(url, info) {
     var rootUrl = this.processURL(info.rootUrl);
     var urlObj = new sync.util.Url(url);
     localStorage.setItem('webdav.latestUrl', urlObj.getFolderUrl());
@@ -622,7 +622,7 @@
    *
    * @return {string} the processed url.
    */
-  WebdavFileBrowser.prototype.processURL = function(url) {
+  PerforceFileBrowser.prototype.processURL = function(url) {
     var processedUrl = url;
 
     // if the url does not start with 'webdav' prepend it to the url.
@@ -636,7 +636,7 @@
    *
    * @return {string} the latest root url.
    */
-  WebdavFileBrowser.prototype.getLatestRootUrl = function() {
+  PerforceFileBrowser.prototype.getLatestRootUrl = function() {
     var lastRootUrl = this.enforcedUrl || localStorage.getItem('webdav.latestRootUrl');
     if (!lastRootUrl && this.isServerPluginInstalled) {
       lastRootUrl = webdavServerPluginUrl;
@@ -649,7 +649,7 @@
    *
    * @return {String} the last set url.
    */
-  WebdavFileBrowser.prototype.getLatestUrl = function() {
+  PerforceFileBrowser.prototype.getLatestUrl = function() {
     var latestUrl = localStorage.getItem('webdav.latestUrl');
     // if the latest url is not in local storage we check if the
     // webdav-server-plugin is installed and we use it.
@@ -680,7 +680,7 @@
   };
 
   // create the connection configurator.
-  var fileBrowser = new WebdavFileBrowser();
+  var fileBrowser = new PerforceFileBrowser();
 
   // register all the listeners on the file browser.
   registerFileBrowserListeners(fileBrowser);
