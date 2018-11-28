@@ -1,5 +1,6 @@
-# web-author-perforce-plug-in
-Oxygen web author Perforce plug-in
+# Important: The project moved to  https://github.com/oxygenxml/web-author-perforce-plugin
+# web-author-perforce-plugin
+Oxygen Web Author Perforce plug-in
 
 ## How to build
 'mvn install' will run the assembly plug-in which in turn creates the WebAuthor plug-in jar
